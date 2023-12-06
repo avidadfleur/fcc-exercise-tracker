@@ -1,3 +1,3 @@
-# Exercise Tracker
+# Exercise Tracker Capstone project
 
-This is the boilerplate for the Exercise Tracker project. Instructions for building your project can be found at https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/exercise-tracker
+Solution to exercise tracker capstone project. Project instructions can be found at https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/exercise-tracker
