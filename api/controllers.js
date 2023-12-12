@@ -158,19 +158,45 @@ const newUserExercise = async (req, res) => {
       if (from || to) {
         query.date = dateObj;
       }
-  
-      const exercises = await Exercise.find(query).sort({"date": 1}).limit(parseInt(limit) ?? 500);
-  
+
+      const aggregationPipeline = [
+        { $match: query },
+        { $sort: { date: 1 } },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: 1 },
+            exercises: { $push: "$$ROOT" }
+          }
+        },
+        { $unwind: "$exercises" },
+        { $limit: parseInt(limit) || 500 },
+        {
+          $project: {
+            _id: "$exercises._id",
+            description: "$exercises.description",
+            duration: "$exercises.duration",
+            date: "$exercises.date",
+            count: 1
+          }
+        }
+      ];
+
+      const exercises = await Exercise.aggregate(aggregationPipeline);
+      
+      if (exercises.length === 0) {
+        return res.status(404).json({ message: 'No exercises found for the given query' });
+      }
+
       const logs = exercises.map(e => ({
         description: e.description,
         duration: e.duration,
         date: e.date
       }));
 
-  
       const log = new Log({
         username: user.username,
-        count: logs.length,
+        count: exercises[0].count,
         _id: user._id,
         log: logs
       });
