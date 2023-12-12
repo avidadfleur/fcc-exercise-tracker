@@ -75,6 +75,8 @@ const newUserExercise = async (req, res) => {
   
   const id = req.params._id;
   const { description, duration, date } = req.body;
+  const nowDate = new Date().setHours(0, 0, 0, 0);
+  const UTCDate = new Date(nowDate).setUTCHours(0);
   
   const errors = [];
   
@@ -114,27 +116,17 @@ const newUserExercise = async (req, res) => {
       username: user.username,
       description,
       duration,
-      date: date 
-      ? new Date(date).toLocaleDateString('en-US', {
-        timeZone: 'UTC' 
-      }) 
-      : new Date().toLocaleDateString('en-US', {
-        timeZone: 'UTC' 
-      })
+      date: date || UTCDate
     });
     
     const newExercise = await exercise.save();
     
     res.status(200).json({
-      user_id: user._id,
-      username: user.username,
-      description: newExercise.description,
-      duration: newExercise.duration,
-      date: newExercise.date
+      newExercise
     });
     
   } catch (err) {
-    
+    console.log(err)
     res.status(500).json(
       { message: 'There was an error while saving the exercise.' }
       );
@@ -160,28 +152,27 @@ const newUserExercise = async (req, res) => {
       }
   
       if (to) {
-        dateObj['$lte'] = addHours(new Date(to), 6);
+        dateObj['$lte'] = new Date(to);
       }
   
       if (from || to) {
         query.date = dateObj;
       }
   
-      const exercises = await Exercise.find(query).limit(parseInt(limit) ?? 500);
+      const exercises = await Exercise.find(query).sort({"date": 1}).limit(parseInt(limit) ?? 500);
   
       const logs = exercises.map(e => ({
         description: e.description,
         duration: e.duration,
         date: e.date
       }));
-  
-      const sortedLogs = logs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
   
       const log = new Log({
         username: user.username,
         count: logs.length,
         _id: user._id,
-        log: sortedLogs
+        log: logs
       });
   
       res.status(200).json(log);
